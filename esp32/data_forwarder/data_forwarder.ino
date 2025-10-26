@@ -1,16 +1,16 @@
 /*
  * =======================================================
- * PHƯƠNG ÁN C: Sửa lỗi thư viện tockn
+ * PHƯƠNG ÁN C.2: (SILENT MODE for Edge Impulse)
  * =======================================================
- * Lỗi biên dịch trước là do tôi trộn lẫn 2 thư viện.
- * Code này chỉ dùng 100% thư viện "MPU6050_tockn".
+ * Xóa bỏ mọi Serial.println() trong setup() để
+ * edge-impulse-data-forwarder không bị nhầm lẫn.
  *
- * Nối dây (Vẫn như cũ - ĐÃ ĐÚNG):
+ * Nối dây (Vẫn như cũ):
  * - SDA -> GP8
  * - SCL -> GP9
  */
 
-#include <MPU6050_tockn.h> // <--- Chỉ dùng thư viện này
+#include <MPU6050_tockn.h>
 #include <Wire.h>
 
 MPU6050 mpu(Wire);
@@ -23,26 +23,15 @@ void setup() {
     
     mpu.begin();
     
-    Serial.println("\n========================================");
-    Serial.println("VibraGuard AI - Data Forwarder (tockn lib)");
-    Serial.println("========================================");
-    Serial.println("Dang kiem tra ket noi (dung thu vien tockn)...");
-
-    // Yêu cầu cảm biến tự hiệu chỉnh
-    // Đây là cách tốt nhất để "test" kết nối.
-    // Nếu nó đứng im ở đây -> Lỗi phần cứng (hàn/đứt dây)
-    Serial.println("Dang tu hieu chinh Gyro... Vui long giu IM cam bien.");
+    // Tự hiệu chỉnh (im lặng, không in gì ra)
     mpu.calcGyroOffsets(); 
-    
-    Serial.println("✅✅✅ THANH CONG! Ket noi I2C thanh cong!");
-    Serial.println("📊 Bat dau stream du lieu (X, Y, Z)...");
 }
 
 void loop() {
-    // 1. Cập nhật dữ liệu (BẮT BUỘC phải gọi hàm này)
+    // 1. Cập nhật dữ liệu
     mpu.update(); 
     
-    // 2. Lấy dữ liệu (Dùng hàm chuẩn của tockn)
+    // 2. Lấy dữ liệu
     float accX = mpu.getAccX();
     float accY = mpu.getAccY();
     float accZ = mpu.getAccZ();
@@ -55,5 +44,5 @@ void loop() {
     Serial.print(",");
     Serial.println(accZ);
     
-    delay(100); // 10 mẫu/giây (như Edge Impulse cần)
+    delay(100); // 10 mẫu/giây
 }
