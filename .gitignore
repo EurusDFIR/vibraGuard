@@ -1,0 +1,49 @@
+# VibraGuard - Git Ignore
+
+# Maven
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+backend/logs/
+backend/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arduino
+esp32/*.hex
+esp32/*.elf
+esp32/*.bin
+
+# Docker volumes
+postgres-data/
+mosquitto-data/
+mosquitto-log/
+
+# Credentials (đừng commit)
+**/credentials.txt
+**/secrets.txt
+**/.env
+
+# Backup files
+*.bak
+*.backup
+*~
