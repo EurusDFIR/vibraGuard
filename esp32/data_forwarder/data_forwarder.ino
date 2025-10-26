@@ -1,89 +1,59 @@
 /*
- * VibraGuard AI - Data Collection (Phase 1)
- * Mục tiêu: Thu thập dữ liệu rung động từ MPU-6050 để huấn luyện AI
+ * =======================================================
+ * PHƯƠNG ÁN C: Sửa lỗi thư viện tockn
+ * =======================================================
+ * Lỗi biên dịch trước là do tôi trộn lẫn 2 thư viện.
+ * Code này chỉ dùng 100% thư viện "MPU6050_tockn".
  *
- * Phần cứng:
- * - ESP32-C3 Super Mini
- * - MPU-6050 (I2C)
- *
- * Sơ đồ nối dây:
- * - MPU-6050 VCC -> 3V3 (ESP32)
- * - MPU-6050 GND -> GND (ESP32)
- * - MPU-6050 SDA -> GP4 (ESP32)
- * - MPU-6050 SCL -> GP5 (ESP32)
- *
- * Cách sử dụng:
- * 1. Nạp code này vào ESP32
- * 2. Chạy: edge-impulse-data-forwarder
- * 3. Thu thập dữ liệu với các nhãn:
- *    - "normal": Gõ cửa, đóng cửa, vỗ tay (3-5 phút)
- *    - "attack": Mô phỏng khoan, đập, cạy (3-5 phút)
- *    - "noise": Không làm gì (1-2 phút)
+ * Nối dây (Vẫn như cũ - ĐÃ ĐÚNG):
+ * - SDA -> GP8
+ * - SCL -> GP9
  */
 
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
+#include <MPU6050_tockn.h> // <--- Chỉ dùng thư viện này
 #include <Wire.h>
 
-Adafruit_MPU6050 mpu;
-int sample_rate_ms = 100; // Thu thập 10 mẫu/giây (1000ms / 100ms)
+MPU6050 mpu(Wire);
 
-// Cấu hình địa chỉ I2C (thay đổi nếu cần)
-#define MPU6050_ADDRESS 0x68 // Thay thành 0x69 nếu debug tool phát hiện ở đó
-
-void setup()
-{
+void setup() {
     Serial.begin(115200);
-
-    // Khởi tạo I2C với SDA=GP4, SCL=GP5
-    Wire.begin(4, 5);
-
+    
+    // Khởi tạo I2C với SDA=GP8, SCL=GP9
+    Wire.begin(8, 9); 
+    
+    mpu.begin();
+    
     Serial.println("\n========================================");
-    Serial.println("VibraGuard AI - Data Forwarder");
+    Serial.println("VibraGuard AI - Data Forwarder (tockn lib)");
     Serial.println("========================================");
+    Serial.println("Dang kiem tra ket noi (dung thu vien tockn)...");
 
-    if (!mpu.begin(MPU6050_ADDRESS))
-    {
-        Serial.println("❌ Loi! Khong tim thay MPU6050.");
-        Serial.println("   Kiem tra lai day ket noi:");
-        Serial.println("   - VCC -> 3V3");
-        Serial.println("   - GND -> GND");
-        Serial.println("   - SDA -> GP4");
-        Serial.println("   - SCL -> GP5");
-        Serial.print("   - Dia chi I2C dang test: 0x");
-        Serial.println(MPU6050_ADDRESS, HEX);
-        Serial.println("   💡 Neu khong phai 0x68, thay doi MPU6050_ADDRESS thanh 0x69");
-        while (1)
-        {
-            delay(10);
-        }
-    }
-
-    Serial.println("✅ MPU6050 san sang!");
-    Serial.println("📊 Bat dau stream du lieu...");
-    Serial.println("   Format: X, Y, Z (acceleration)");
-    Serial.println("========================================\n");
-
-    // Cấu hình MPU6050
-    mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-    mpu.setGyroRange(MPU6050_RANGE_500_DEG);
-    mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-
-    delay(1000); // Cho cảm biến ổn định
+    // Yêu cầu cảm biến tự hiệu chỉnh
+    // Đây là cách tốt nhất để "test" kết nối.
+    // Nếu nó đứng im ở đây -> Lỗi phần cứng (hàn/đứt dây)
+    Serial.println("Dang tu hieu chinh Gyro... Vui long giu IM cam bien.");
+    mpu.calcGyroOffsets(); 
+    
+    Serial.println("✅✅✅ THANH CONG! Ket noi I2C thanh cong!");
+    Serial.println("📊 Bat dau stream du lieu (X, Y, Z)...");
 }
 
-void loop()
-{
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+void loop() {
+    // 1. Cập nhật dữ liệu (BẮT BUỘC phải gọi hàm này)
+    mpu.update(); 
+    
+    // 2. Lấy dữ liệu (Dùng hàm chuẩn của tockn)
+    float accX = mpu.getAccX();
+    float accY = mpu.getAccY();
+    float accZ = mpu.getAccZ();
 
-    // In 3 trục gia tốc X, Y, Z theo định dạng Edge Impulse
-    // Format: x,y,z (dấu phẩy, không có khoảng trắng)
-    Serial.print(a.acceleration.x);
+    // 3. In ra theo format Edge Impulse
+    // Format: x,y,z (không có khoảng trắng)
+    Serial.print(accX);
     Serial.print(",");
-    Serial.print(a.acceleration.y);
+    Serial.print(accY);
     Serial.print(",");
-    Serial.println(a.acceleration.z);
-
-    delay(sample_rate_ms);
+    Serial.println(accZ);
+    
+    delay(100); // 10 mẫu/giây (như Edge Impulse cần)
 }
