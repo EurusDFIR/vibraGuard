@@ -432,17 +432,22 @@ void processAI()
         // ✅ Quyết định kích hoạt alarm (CHỈ KHI ĐÃ ARM)
         if (isSystemArmed &&
             attack_score > ATTACK_THRESHOLD &&
-            attack_score > (normal_score + CERTAINTY_MARGIN) &&
-            !isAlarmActive)
+            attack_score > (normal_score + CERTAINTY_MARGIN))
         {
-            Serial.println("\n🚨🚨🚨 ATTACK DETECTED! 🚨🚨🚨");
-            Serial.printf("   Confidence: %.1f%%\n", attack_score * 100);
-            Serial.printf("   Attack > Normal by %.1f%%\n",
-                          (attack_score - normal_score) * 100);
-
-            isAlarmActive = true;
-            alarmStartTime = millis();
+            // Gửi MQTT alert mỗi lần phát hiện attack
             sendVibrationAlert(attack_score, normal_score, noise_score);
+
+            // Kích hoạt alarm nếu chưa active
+            if (!isAlarmActive)
+            {
+                Serial.println("\n🚨🚨🚨 ATTACK DETECTED! 🚨🚨🚨");
+                Serial.printf("   Confidence: %.1f%%\n", attack_score * 100);
+                Serial.printf("   Attack > Normal by %.1f%%\n",
+                              (attack_score - normal_score) * 100);
+
+                isAlarmActive = true;
+                alarmStartTime = millis();
+            }
         }
     }
 }
