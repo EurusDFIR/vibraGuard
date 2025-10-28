@@ -73,6 +73,7 @@ static float buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE] = {0};
 static size_t buf_idx = 0;
 
 // System State
+bool isSystemArmed = false; // ✅ Thêm biến để kiểm soát ARM/DISARM
 bool isAlarmActive = false;
 bool wifiConnected = false;
 bool mqttConnected = false;
@@ -347,6 +348,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     if (message.indexOf("DISARM") >= 0 || message.indexOf("disarm") >= 0)
     {
         Serial.println("🔕 DISARM Command Received");
+        isSystemArmed = false; // ✅ Tắt hệ thống
         isAlarmActive = false;
         digitalWrite(BUZZER_PIN, LOW);
         Serial.println("   Alarm deactivated!");
@@ -355,7 +357,16 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     else if (message.indexOf("ARM") >= 0 || message.indexOf("arm") >= 0)
     {
         Serial.println("🔔 ARM Command Received");
+        isSystemArmed = true; // ✅ Kích hoạt hệ thống
         Serial.println("   System armed and monitoring");
+    }
+    // Xử lý lệnh SOUND_ALARM (Panic Button - Bật còi thủ công)
+    else if (message.indexOf("SOUND_ALARM") >= 0 || message.indexOf("sound_alarm") >= 0)
+    {
+        Serial.println("🚨 SOUND_ALARM Command Received (Manual Panic Button)");
+        digitalWrite(BUZZER_PIN, HIGH);
+        isAlarmActive = true;
+        Serial.println("   Manual alarm activated! Use DISARM to stop.");
     }
     // Xử lý lệnh STATUS
     else if (message.indexOf("STATUS") >= 0 || message.indexOf("status") >= 0)
@@ -426,19 +437,25 @@ void processAI()
                       attack_score * 100, normal_score * 100, noise_score * 100,
                       result.timing.classification);
 
-        // Quyết định kích hoạt alarm
-        if (attack_score > ATTACK_THRESHOLD &&
-            attack_score > (normal_score + CERTAINTY_MARGIN) &&
-            !isAlarmActive)
+        // ✅ Quyết định kích hoạt alarm (CHỈ KHI ĐÃ ARM)
+        if (isSystemArmed &&
+            attack_score > ATTACK_THRESHOLD &&
+            attack_score > (normal_score + CERTAINTY_MARGIN))
         {
-            Serial.println("\n🚨🚨🚨 ATTACK DETECTED! 🚨🚨🚨");
-            Serial.printf("   Confidence: %.1f%%\n", attack_score * 100);
-            Serial.printf("   Attack > Normal by %.1f%%\n",
-                          (attack_score - normal_score) * 100);
-
-            isAlarmActive = true;
-            alarmStartTime = millis();
+            // Gửi MQTT alert mỗi lần phát hiện attack
             sendVibrationAlert(attack_score, normal_score, noise_score);
+
+            // Kích hoạt alarm nếu chưa active
+            if (!isAlarmActive)
+            {
+                Serial.println("\n🚨🚨🚨 ATTACK DETECTED! 🚨🚨🚨");
+                Serial.printf("   Confidence: %.1f%%\n", attack_score * 100);
+                Serial.printf("   Attack > Normal by %.1f%%\n",
+                              (attack_score - normal_score) * 100);
+
+                isAlarmActive = true;
+                alarmStartTime = millis();
+            }
         }
     }
 }
@@ -486,6 +503,7 @@ void printSystemStatus()
         Serial.println();
     }
     Serial.printf("  MQTT: %s\n", mqttConnected ? "✅ Connected" : "❌ Disconnected");
+    Serial.printf("  System: %s\n", isSystemArmed ? "🔔 ARMED" : "🔕 DISARMED"); // ✅ Thêm dòng này
     Serial.printf("  Alarm: %s\n", isAlarmActive ? "🚨 ACTIVE" : "✅ Inactive");
     Serial.printf("  Uptime: %lu seconds\n", millis() / 1000);
     Serial.println("\nStatistics:");

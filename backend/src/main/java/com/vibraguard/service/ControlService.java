@@ -71,6 +71,26 @@ public class ControlService {
     }
 
     /**
+     * Gửi lệnh SOUND_ALARM (Panic Button) đến một thiết bị cụ thể
+     */
+    public void sendSoundAlarmCommand(String deviceId) {
+        String topic = "vibra_guard/control/" + deviceId;
+        sendMqttCommand(topic, "SOUND_ALARM");
+        log.info("🚨 SOUND_ALARM command sent to device: {}", deviceId);
+    }
+
+    /**
+     * Gửi lệnh SOUND_ALARM (Panic Button) đến tất cả thiết bị
+     */
+    public void sendSoundAlarmCommandToAll() {
+        List<Device> devices = deviceRepository.findAll();
+        for (Device device : devices) {
+            sendSoundAlarmCommand(device.getDeviceId());
+        }
+        log.info("🚨 SOUND_ALARM command sent to {} devices", devices.size());
+    }
+
+    /**
      * Lấy trạng thái hiện tại của hệ thống
      */
     public String getSystemStatus() {

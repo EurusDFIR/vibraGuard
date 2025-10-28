@@ -128,6 +128,23 @@ function App() {
     }
   }
 
+  const handlePanicButton = async () => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/control/sound_alarm`)
+      console.log('🚨 SOUND_ALARM response:', response.data)
+      toast.warning('🚨 Còi báo động thủ công đã được kích hoạt!', {
+        position: "top-right",
+        autoClose: 5000,
+      })
+    } catch (error) {
+      console.error('❌ Error activating manual alarm:', error)
+      toast.error('❌ Lỗi khi kích hoạt còi thủ công!', {
+        position: "top-right",
+        autoClose: 3000,
+      })
+    }
+  }
+
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleString('vi-VN')
   }
@@ -156,6 +173,9 @@ function App() {
             </button>
             <button className="btn btn-disarm" onClick={handleDisarm}>
               🔕 Tắt báo động (DISARM)
+            </button>
+            <button className="btn btn-panic" onClick={handlePanicButton} title="Bật còi báo động thủ công">
+              🚨 Kêu Còi Ngay (Panic)
             </button>
             <button className="btn btn-refresh" onClick={fetchHistory}>
               🔄 Làm mới
