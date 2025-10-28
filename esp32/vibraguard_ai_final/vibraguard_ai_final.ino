@@ -42,7 +42,7 @@ const int MQTT_PORT = 1883;
 const char *DEVICE_ID = "ESP32_CUA_SO_01";
 
 // Ngưỡng AI (0.0 - 1.0)
-const float ATTACK_THRESHOLD = 0.85; // 85% confidence để kích hoạt alarm
+const float ATTACK_THRESHOLD = 0.80; // 80% confidence để kích hoạt alarm
 const float CERTAINTY_MARGIN = 0.1;  // Attack phải cao hơn Normal ít nhất 10%
 
 // Buzzer
@@ -146,6 +146,7 @@ void setup()
     client.setServer(MQTT_SERVER, MQTT_PORT);
     client.setCallback(mqttCallback);
     client.setKeepAlive(60);
+    client.setSocketTimeout(2); // ⚡ Timeout 2 giây để tránh blocking lâu
 
     // In thông tin hệ thống
     Serial.println("\n========================================");
@@ -442,10 +443,8 @@ void processAI()
             attack_score > ATTACK_THRESHOLD &&
             attack_score > (normal_score + CERTAINTY_MARGIN))
         {
-            // Gửi MQTT alert mỗi lần phát hiện attack
-            sendVibrationAlert(attack_score, normal_score, noise_score);
-
-            // Kích hoạt alarm nếu chưa active
+            // ⚡ QUAN TRỌNG: Kích hoạt alarm NGAY LẬP TỨC trước khi gửi MQTT
+            // (để tránh bị delay bởi MQTT blocking)
             if (!isAlarmActive)
             {
                 Serial.println("\n🚨🚨🚨 ATTACK DETECTED! 🚨🚨🚨");
@@ -453,9 +452,14 @@ void processAI()
                 Serial.printf("   Attack > Normal by %.1f%%\n",
                               (attack_score - normal_score) * 100);
 
+                // Bật còi ngay lập tức
                 isAlarmActive = true;
                 alarmStartTime = millis();
+                digitalWrite(BUZZER_PIN, HIGH); // ⚡ Bật còi NGAY!
             }
+
+            // Gửi MQTT alert sau (không blocking alarm)
+            sendVibrationAlert(attack_score, normal_score, noise_score);
         }
     }
 }
