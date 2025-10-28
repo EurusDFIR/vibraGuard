@@ -188,12 +188,12 @@ Sau khi có dữ liệu, bạn huấn luyện "bộ não" trên web.
 ```cpp
 /*
  * =======================================================
- * VibraGuard AI - FINAL INTEGRATION CODE
+ * VibraGuard AI - FINAL INTEGRATION CODE (Giai đoạn 5)
  * =======================================================
  * - Board: ESP32-C3 Super Mini
- * - Sensor: MPU-6050 (I2C: GP4, GP5)
+ * - Sensor: MPU-6050 (I2C: GP8, GP9)
  * - Buzzer: GP1 (qua Transistor)
- * - AI: Edge Impulse TinyML
+ * - AI: Edge Impulse (95.1% Accuracy)
  * - Comms: WiFi + MQTT
  */
 
@@ -202,24 +202,23 @@ Sau khi có dữ liệu, bạn huấn luyện "bộ não" trên web.
 #include <PubSubClient.h>
 
 // --- Thư viện Cảm biến & AI ---
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
+#include <MPU6050_tockn.h> // Thư viện đọc MPU-6050 (bạn đã cài)
 #include <Wire.h>
-#include <ei-vibraguard-ai-arduino.h> // <--- THAY TÊN NÀY! (Tên file .h trong thư viện .zip)
+#include <ei-vibraguard-arduino.h> // <--- QUAN TRỌNG: TÊN THƯ VIỆN BẠN VỪA IMPORT TỪ FILE .ZIP
 
 // ===== CẤU HÌNH WIFI =====
 const char *ssid = "LE HUNG";       // Tên WiFi của bạn
 const char *password = "123456789"; // Mật khẩu WiFi
 
 // ===== CẤU HÌNH MQTT =====
-const char *mqtt_server = "192.168.1.12"; // IP máy tính chạy Mosquitto
+const char *mqtt_server = "192.168.1.11"; // IP máy tính chạy Mosquitto
 const int mqtt_port = 1883;
 const char *mqtt_topic = "vibra_guard/sensor";
 const char *device_id = "ESP32_CUA_SO_01";
 
 // ===== ĐỊNH NGHĨA CHÂN =====
 const int BUZZER_PIN = 1; // Điều khiển Buzzer qua Transistor (Nối vào GP1)
-// Chân I2C (SDA=4, SCL=5) được định nghĩa trong Wire.begin()
+// Chân I2C (SDA=8, SCL=9) được định nghĩa trong Wire.begin()
 
 // ===== BIẾN TRẠNG THÁI =====
 bool isAlarmActive = false; // Trạng thái báo động
@@ -227,7 +226,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // ===== BIẾN CẢM BIẾN & AI =====
-Adafruit_MPU6050 mpu;
+MPU6050 mpu(Wire);
 // Các biến này lấy từ code ví dụ của Edge Impulse
 static bool use_continuous_mode = false;
 float buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE] = { 0 };
@@ -245,18 +244,17 @@ void mqttCallback(char *topic, byte *payload, unsigned int length);
 void setup()
 {
     Serial.begin(115200);
-    // Khởi tạo I2C với SDA=GP4, SCL=GP5
-    Wire.begin(4, 5);
+    // Khởi tạo I2C với SDA=GP8, SCL=GP9
+    Wire.begin(8, 9);
 
     Serial.println("\n\n========================================");
-    Serial.println("VibraGuard AI System - Starting...");
+    Serial.println("VibraGuard AI System - FINAL VERSION");
     Serial.println("========================================");
 
-    // Khởi tạo MPU6050
-    if (!mpu.begin()) {
-        Serial.println("Loi! Khong tim thay MPU6050.");
-        while (1) { delay(10); }
-    }
+    // Khởi tạo MPU6050 (thư viện tockn)
+    mpu.begin();
+    Serial.println("Dang hieu chinh Gyro... Vui long giu IM.");
+    mpu.calcGyroOffsets(); // Tự hiệu chỉnh
     Serial.println("MPU6050 AI Sensor detected!");
 
     // Cấu hình còi
@@ -282,16 +280,18 @@ void loop()
     }
     client.loop(); // Rất quan trọng, phải gọi liên tục
 
-    // 2. Đọc dữ liệu cảm biến
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+    // 2. Đọc dữ liệu cảm biến (dùng tockn)
+    mpu.update();
+    float accX = mpu.getAccX();
+    float accY = mpu.getAccY();
+    float accZ = mpu.getAccZ();
 
     // 3. Nạp dữ liệu vào bộ đệm của AI
-    buffer[buf_idx++] = a.acceleration.x;
-    buffer[buf_idx++] = a.acceleration.y;
-    buffer[buf_idx++] = a.acceleration.z;
+    buffer[buf_idx++] = accX;
+    buffer[buf_idx++] = accY;
+    buffer[buf_idx++] = accZ;
 
-    // 4. Khi bộ đệm đầy, yêu cầu AI phân tích
+    // 4. Khi bộ đệm đầy (ví dụ 2 giây), yêu cầu AI phân tích
     if (buf_idx >= EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE) {
         buf_idx = 0; // Reset bộ đệm
 
@@ -299,21 +299,21 @@ void loop()
         signal_t signal;
         numpy::signal_from_buffer(buffer, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &signal);
 
-        // Chạy phân loại (AI "suy nghĩ")
+        // Chạy phân loại (đây là lúc AI "suy nghĩ" - 1ms)
         ei_impulse_result_t result = { 0 };
         run_classifier(&signal, &result, false);
 
-        // 5. Lấy kết quả phân loại
-        float normal_score = 0.0;
+        // 5. Lấy kết quả phân loại (chắc chắn nhất)
         float attack_score = 0.0;
+        float normal_score = 0.0;
         float noise_score = 0.0;
 
         for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
-            if (strcmp(result.classification[ix].label, "normal") == 0) {
-                normal_score = result.classification[ix].value;
-            }
             if (strcmp(result.classification[ix].label, "attack") == 0) {
                 attack_score = result.classification[ix].value;
+            }
+            if (strcmp(result.classification[ix].label, "normal") == 0) {
+                normal_score = result.classification[ix].value;
             }
             if (strcmp(result.classification[ix].label, "noise") == 0) {
                 noise_score = result.classification[ix].value;
@@ -321,8 +321,8 @@ void loop()
         }
 
         // In kết quả ra Serial để debug
-        Serial.printf("AI Result: Normal(%.2f) - Attack(%.2f) - Noise(%.2f)\n",
-                      normal_score, attack_score, noise_score);
+        Serial.printf("AI Result: Attack(%.2f) - Normal(%.2f) - Noise(%.2f)\n",
+                      attack_score, normal_score, noise_score);
 
         // 6. Ra quyết định THÔNG MINH
         // Ngưỡng: Chắc chắn > 80% là "tấn công" VÀ nó không phải là "bình thường"
@@ -343,7 +343,7 @@ void loop()
         digitalWrite(BUZZER_PIN, LOW);
     }
 
-    delay(10); // Delay nhỏ cho hệ thống
+    // delay(10); // Không cần delay, vì AI loop đã có nhịp
 }
 
 // =======================
@@ -392,8 +392,7 @@ void sendVibrationAlert() {
     String payload = "{";
     payload += "\"deviceId\":\"" + String(device_id) + "\",";
     payload += "\"timestamp\":" + String(millis()) + ",";
-    payload += "\"sensorValue\":1,";
-    payload += "\"ai_triggered\":true"; // Thêm dữ liệu cho "xịn"
+    payload += "\"ai_triggered\":true"; // Báo cho backend biết đây là AI trigger
     payload += "}";
 
     boolean success = client.publish(mqtt_topic, payload.c_str());

@@ -15,21 +15,23 @@
 
 MPU6050 mpu(Wire);
 
-void setup() {
+void setup()
+{
     Serial.begin(115200);
 
     // Khởi tạo I2C với SDA=GP8, SCL=GP9
-    Wire.begin(8, 9); 
+    Wire.begin(8, 9);
 
     mpu.begin();
 
     // Tự hiệu chỉnh (im lặng, không in gì ra)
-    mpu.calcGyroOffsets(); 
+    mpu.calcGyroOffsets();
 }
 
-void loop() {
+void loop()
+{
     // 1. Cập nhật dữ liệu
-    mpu.update(); 
+    mpu.update();
 
     // 2. Lấy dữ liệu
     float accX = mpu.getAccX();
@@ -44,5 +46,5 @@ void loop() {
     Serial.print(",");
     Serial.println(accZ);
 
-    delay(20); // 10 mẫu/giây
+    delay(20); // 50 mẫu/giây (50Hz) - BEST PRACTICE cho rung động!
 }
