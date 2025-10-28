@@ -42,7 +42,7 @@ const int MQTT_PORT = 1883;
 const char *DEVICE_ID = "ESP32_CUA_SO_01";
 
 // Ngưỡng AI (0.0 - 1.0)
-const float ATTACK_THRESHOLD = 0.80; // 80% confidence để kích hoạt alarm
+const float ATTACK_THRESHOLD = 0.85; // 85% confidence để kích hoạt alarm
 const float CERTAINTY_MARGIN = 0.1;  // Attack phải cao hơn Normal ít nhất 10%
 
 // Buzzer
