@@ -344,10 +344,18 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     }
     Serial.println(message);
 
-    // Xử lý lệnh DISARM
-    if (message.indexOf("DISARM") >= 0 || message.indexOf("disarm") >= 0)
+    // ⚠️ QUAN TRỌNG: Kiểm tra SOUND_ALARM TRƯỚC ARM (vì SOUND_ALARM chứa chữ "ARM")
+    if (message.indexOf("SOUND_ALARM") >= 0 || message.indexOf("sound_alarm") >= 0)
     {
-        Serial.println("🔕 DISARM Command Received");
+        Serial.println("� SOUND_ALARM Command Received (Manual Panic Button)");
+        digitalWrite(BUZZER_PIN, HIGH);
+        isAlarmActive = true;
+        Serial.println("   Manual alarm activated! Use DISARM to stop.");
+    }
+    // Xử lý lệnh DISARM
+    else if (message.indexOf("DISARM") >= 0 || message.indexOf("disarm") >= 0)
+    {
+        Serial.println("� DISARM Command Received");
         isSystemArmed = false; // ✅ Tắt hệ thống
         isAlarmActive = false;
         digitalWrite(BUZZER_PIN, LOW);
@@ -356,17 +364,9 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     // Xử lý lệnh ARM
     else if (message.indexOf("ARM") >= 0 || message.indexOf("arm") >= 0)
     {
-        Serial.println("🔔 ARM Command Received");
+        Serial.println("� ARM Command Received");
         isSystemArmed = true; // ✅ Kích hoạt hệ thống
         Serial.println("   System armed and monitoring");
-    }
-    // Xử lý lệnh SOUND_ALARM (Panic Button - Bật còi thủ công)
-    else if (message.indexOf("SOUND_ALARM") >= 0 || message.indexOf("sound_alarm") >= 0)
-    {
-        Serial.println("🚨 SOUND_ALARM Command Received (Manual Panic Button)");
-        digitalWrite(BUZZER_PIN, HIGH);
-        isAlarmActive = true;
-        Serial.println("   Manual alarm activated! Use DISARM to stop.");
     }
     // Xử lý lệnh STATUS
     else if (message.indexOf("STATUS") >= 0 || message.indexOf("status") >= 0)
