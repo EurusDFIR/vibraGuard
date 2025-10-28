@@ -490,7 +490,7 @@ void printSystemStatus()
         Serial.println();
     }
     Serial.printf("  MQTT: %s\n", mqttConnected ? "✅ Connected" : "❌ Disconnected");
-    Serial.printf("  System: %s\n", isSystemArmed ? "🔔 ARMED" : "🔕 DISARMED");  // ✅ Thêm dòng này
+    Serial.printf("  System: %s\n", isSystemArmed ? "🔔 ARMED" : "🔕 DISARMED"); // ✅ Thêm dòng này
     Serial.printf("  Alarm: %s\n", isAlarmActive ? "🚨 ACTIVE" : "✅ Inactive");
     Serial.printf("  Uptime: %lu seconds\n", millis() / 1000);
     Serial.println("\nStatistics:");
