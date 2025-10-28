@@ -25,7 +25,7 @@
 
 **1. Khởi tạo Dự án:**
 
-- **React:** Dùng `create-react-app` hoặc `Vite`:
+- **React:** Dùng `Vite`:
   ```bash
   npx create-react-app vibraguard-web
   # Hoặc: npm create vite@latest vibraguard-web --template react

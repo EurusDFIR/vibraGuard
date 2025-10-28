@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class MqttSubscriberService {
     private final VibrationEventRepository eventRepository;
     private final DeviceRepository deviceRepository;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate; // WebSocket để gửi alerts
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     @Transactional
@@ -74,8 +76,42 @@ public class MqttSubscriberService {
                     device.getDeviceId(),
                     savedEvent.getEventTimestamp());
 
+            // **GỬI ALERT QUA WEBSOCKET** đến tất cả client đang kết nối
+            sendWebSocketAlert(sensorData, savedEvent);
+
         } catch (Exception e) {
             log.error("❌ Error processing MQTT message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gửi thông báo real-time qua WebSocket đến tất cả frontend clients
+     * Topic: /topic/alerts
+     */
+    private void sendWebSocketAlert(SensorDataDTO sensorData, VibrationEvent event) {
+        try {
+            // Tạo alert message với thông tin chi tiết
+            var alertMessage = new java.util.HashMap<String, Object>();
+            alertMessage.put("eventId", event.getId());
+            alertMessage.put("deviceId", sensorData.getDeviceId());
+            alertMessage.put("timestamp", event.getEventTimestamp().toString());
+            alertMessage.put("severity", event.getSeverity());
+            alertMessage.put("sensorValue", event.getSensorValue());
+
+            // Thêm thông tin AI nếu có
+            if (sensorData.getConfidence() != null) {
+                alertMessage.put("confidence", sensorData.getConfidence());
+            }
+            if (sensorData.getAiTriggered() != null) {
+                alertMessage.put("aiTriggered", sensorData.getAiTriggered());
+            }
+
+            // Gửi đến topic /topic/alerts
+            messagingTemplate.convertAndSend("/topic/alerts", alertMessage);
+            log.info("📡 WebSocket alert sent to /topic/alerts: deviceId={}", sensorData.getDeviceId());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to send WebSocket alert: {}", e.getMessage(), e);
         }
     }
 }
