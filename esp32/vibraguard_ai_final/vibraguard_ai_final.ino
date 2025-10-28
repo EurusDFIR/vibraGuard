@@ -73,7 +73,7 @@ static float buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE] = {0};
 static size_t buf_idx = 0;
 
 // System State
-bool isSystemArmed = false;  // ✅ Thêm biến để kiểm soát ARM/DISARM
+bool isSystemArmed = false; // ✅ Thêm biến để kiểm soát ARM/DISARM
 bool isAlarmActive = false;
 bool wifiConnected = false;
 bool mqttConnected = false;
@@ -348,7 +348,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     if (message.indexOf("DISARM") >= 0 || message.indexOf("disarm") >= 0)
     {
         Serial.println("🔕 DISARM Command Received");
-        isSystemArmed = false;  // ✅ Tắt hệ thống
+        isSystemArmed = false; // ✅ Tắt hệ thống
         isAlarmActive = false;
         digitalWrite(BUZZER_PIN, LOW);
         Serial.println("   Alarm deactivated!");
@@ -357,7 +357,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     else if (message.indexOf("ARM") >= 0 || message.indexOf("arm") >= 0)
     {
         Serial.println("🔔 ARM Command Received");
-        isSystemArmed = true;  // ✅ Kích hoạt hệ thống
+        isSystemArmed = true; // ✅ Kích hoạt hệ thống
         Serial.println("   System armed and monitoring");
     }
     // Xử lý lệnh STATUS
@@ -490,6 +490,7 @@ void printSystemStatus()
         Serial.println();
     }
     Serial.printf("  MQTT: %s\n", mqttConnected ? "✅ Connected" : "❌ Disconnected");
+    Serial.printf("  System: %s\n", isSystemArmed ? "🔔 ARMED" : "🔕 DISARMED");  // ✅ Thêm dòng này
     Serial.printf("  Alarm: %s\n", isAlarmActive ? "🚨 ACTIVE" : "✅ Inactive");
     Serial.printf("  Uptime: %lu seconds\n", millis() / 1000);
     Serial.println("\nStatistics:");
