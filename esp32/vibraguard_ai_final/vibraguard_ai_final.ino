@@ -73,6 +73,7 @@ static float buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE] = {0};
 static size_t buf_idx = 0;
 
 // System State
+bool isSystemArmed = false;  // ✅ Thêm biến để kiểm soát ARM/DISARM
 bool isAlarmActive = false;
 bool wifiConnected = false;
 bool mqttConnected = false;
@@ -347,6 +348,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     if (message.indexOf("DISARM") >= 0 || message.indexOf("disarm") >= 0)
     {
         Serial.println("🔕 DISARM Command Received");
+        isSystemArmed = false;  // ✅ Tắt hệ thống
         isAlarmActive = false;
         digitalWrite(BUZZER_PIN, LOW);
         Serial.println("   Alarm deactivated!");
@@ -355,6 +357,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     else if (message.indexOf("ARM") >= 0 || message.indexOf("arm") >= 0)
     {
         Serial.println("🔔 ARM Command Received");
+        isSystemArmed = true;  // ✅ Kích hoạt hệ thống
         Serial.println("   System armed and monitoring");
     }
     // Xử lý lệnh STATUS
@@ -426,8 +429,9 @@ void processAI()
                       attack_score * 100, normal_score * 100, noise_score * 100,
                       result.timing.classification);
 
-        // Quyết định kích hoạt alarm
-        if (attack_score > ATTACK_THRESHOLD &&
+        // ✅ Quyết định kích hoạt alarm (CHỈ KHI ĐÃ ARM)
+        if (isSystemArmed &&
+            attack_score > ATTACK_THRESHOLD &&
             attack_score > (normal_score + CERTAINTY_MARGIN) &&
             !isAlarmActive)
         {
