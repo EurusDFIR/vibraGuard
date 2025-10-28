@@ -360,6 +360,14 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         isSystemArmed = true; // ✅ Kích hoạt hệ thống
         Serial.println("   System armed and monitoring");
     }
+    // Xử lý lệnh SOUND_ALARM (Panic Button - Bật còi thủ công)
+    else if (message.indexOf("SOUND_ALARM") >= 0 || message.indexOf("sound_alarm") >= 0)
+    {
+        Serial.println("🚨 SOUND_ALARM Command Received (Manual Panic Button)");
+        digitalWrite(BUZZER_PIN, HIGH);
+        isAlarmActive = true;
+        Serial.println("   Manual alarm activated! Use DISARM to stop.");
+    }
     // Xử lý lệnh STATUS
     else if (message.indexOf("STATUS") >= 0 || message.indexOf("status") >= 0)
     {

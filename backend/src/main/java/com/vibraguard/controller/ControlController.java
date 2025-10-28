@@ -87,6 +87,36 @@ public class ControlController {
     }
 
     /**
+     * POST /api/control/sound_alarm
+     * Bật còi báo động thủ công (Panic Button)
+     */
+    @PostMapping("/sound_alarm")
+    public ResponseEntity<Map<String, Object>> soundAlarm(@RequestParam(required = false) String deviceId) {
+        log.info("🚨 SOUND_ALARM command received (Manual Panic Button)");
+
+        try {
+            if (deviceId != null && !deviceId.isEmpty()) {
+                controlService.sendSoundAlarmCommand(deviceId);
+            } else {
+                controlService.sendSoundAlarmCommandToAll();
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Manual alarm activated successfully");
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("❌ Error activating manual alarm: {}", e.getMessage());
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    /**
      * GET /api/control/status
      * Lấy trạng thái hiện tại của hệ thống
      */

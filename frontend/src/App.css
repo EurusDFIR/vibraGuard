@@ -138,6 +138,26 @@ section h2 {
   color: white;
 }
 
+.btn-panic {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  animation: pulse-button 2s ease-in-out infinite;
+}
+
+.btn-panic:hover {
+  animation: none;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+@keyframes pulse-button {
+  0%, 100% { 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% { 
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
 .btn-refresh {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
