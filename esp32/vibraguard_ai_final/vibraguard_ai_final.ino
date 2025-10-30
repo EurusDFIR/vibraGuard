@@ -37,7 +37,7 @@ const char *WIFI_SSID = "LE HUNG";
 const char *WIFI_PASSWORD = "123456789";
 
 // MQTT Broker
-const char *MQTT_SERVER = "192.168.1.11"; // IP máy chạy Mosquitto
+const char *MQTT_SERVER = "192.168.1.2"; // IP máy chạy Mosquitto
 const int MQTT_PORT = 1883;
 const char *DEVICE_ID = "ESP32_CUA_SO_01";
 
@@ -85,7 +85,7 @@ unsigned long lastMQTTCheck = 0;
 unsigned long lastAIProcess = 0;
 const unsigned long WIFI_CHECK_INTERVAL = 10000;
 const unsigned long MQTT_CHECK_INTERVAL = 5000;
-const unsigned long AI_PROCESS_INTERVAL = 100; // 10 lần/giây để đọc sensor
+const unsigned long AI_PROCESS_INTERVAL = 20; // ✅ FIX: 50 lần/giây (tăng từ 10 lần) để đầy buffer nhanh hơn
 
 // Statistics
 unsigned long totalInferences = 0;
@@ -146,7 +146,7 @@ void setup()
     client.setServer(MQTT_SERVER, MQTT_PORT);
     client.setCallback(mqttCallback);
     client.setKeepAlive(60);
-    client.setSocketTimeout(2); // ⚡ Timeout 2 giây để tránh blocking lâu
+    client.setSocketTimeout(1); // ✅ FIX: Giảm từ 2s → 1s để tránh blocking lâu
 
     // In thông tin hệ thống
     Serial.println("\n========================================");
@@ -304,7 +304,14 @@ void sendVibrationAlert(float attack_score, float normal_score, float noise_scor
 {
     if (!mqttConnected)
     {
-        Serial.println("⚠️  Cannot send MQTT - Not connected");
+        Serial.println("⚠️  Cannot send MQTT - mqttConnected flag is false");
+        return;
+    }
+
+    if (!client.connected())
+    {
+        Serial.println("⚠️  Cannot send MQTT - client.connected() returned false");
+        mqttConnected = false; // Update flag
         return;
     }
 
@@ -320,15 +327,21 @@ void sendVibrationAlert(float attack_score, float normal_score, float noise_scor
     payload += "\"confidence\":" + String(attack_score, 3);
     payload += "}";
 
-    if (client.publish(TOPIC_SENSOR, payload.c_str()))
+    Serial.printf("📤 Publishing to topic: %s\n", TOPIC_SENSOR);
+    Serial.printf("📦 Payload (%d bytes): %s\n", payload.length(), payload.c_str());
+
+    bool publishResult = client.publish(TOPIC_SENSOR, payload.c_str());
+
+    if (publishResult)
     {
-        Serial.println("📤 MQTT Alert Sent:");
-        Serial.println("   " + payload);
+        Serial.println("✅ MQTT Alert Sent Successfully!");
         attacksDetected++;
     }
     else
     {
-        Serial.println("❌ MQTT publish failed!");
+        Serial.println("❌ MQTT publish() returned FALSE!");
+        Serial.printf("   Client state: %d\n", client.state());
+        mqttConnected = false; // Mark for reconnection
     }
 }
 
@@ -392,11 +405,23 @@ void processAI()
     buffer[buf_idx++] = accY;
     buffer[buf_idx++] = accZ;
 
+    // 🔍 DEBUG: Track buffer fill progress (mỗi 10% in log)
+    static int lastPercent = 0;
+    int currentPercent = (buf_idx * 100) / EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
+    if (currentPercent >= lastPercent + 10 && currentPercent < 100)
+    {
+        Serial.printf("📊 Buffer: %d%%\n", currentPercent);
+        lastPercent = currentPercent;
+    }
+
     // 3. Khi buffer đầy, chạy AI inference
     if (buf_idx >= EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE)
     {
         buf_idx = 0;
+        lastPercent = 0; // Reset cho lần sau
         totalInferences++;
+
+        Serial.println("🧠 Running AI inference...");
 
         // Tạo signal từ buffer
         signal_t signal;
@@ -434,7 +459,7 @@ void processAI()
         }
 
         // Debug output
-        Serial.printf("🧠 AI: Attack=%.2f%% | Normal=%.2f%% | Noise=%.2f%% | Time=%dms\n",
+        Serial.printf("🧠 AI Result: Attack=%.2f%% | Normal=%.2f%% | Noise=%.2f%% | Time=%dms\n",
                       attack_score * 100, normal_score * 100, noise_score * 100,
                       result.timing.classification);
 
@@ -458,8 +483,16 @@ void processAI()
                 digitalWrite(BUZZER_PIN, HIGH); // ⚡ Bật còi NGAY!
             }
 
-            // Gửi MQTT alert sau (không blocking alarm)
-            sendVibrationAlert(attack_score, normal_score, noise_score);
+            // ✅ FIX: Gửi MQTT alert với error handling tốt hơn
+            Serial.println("📡 Attempting to send MQTT alert...");
+            if (mqttConnected && client.connected())
+            {
+                sendVibrationAlert(attack_score, normal_score, noise_score);
+            }
+            else
+            {
+                Serial.println("⚠️  MQTT not ready - Alert not sent (but alarm is active!)");
+            }
         }
     }
 }

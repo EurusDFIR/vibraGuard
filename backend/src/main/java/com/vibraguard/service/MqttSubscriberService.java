@@ -14,9 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -57,18 +55,14 @@ public class MqttSubscriberService {
             event.setDevice(device);
             event.setSensorValue(sensorData.getSensorValue() != null ? sensorData.getSensorValue() : 1);
 
-            // Convert timestamp từ millis sang LocalDateTime
-            if (sensorData.getTimestamp() != null) {
-                LocalDateTime timestamp = LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(sensorData.getTimestamp()),
-                        ZoneId.systemDefault());
-                event.setEventTimestamp(timestamp);
-            } else {
-                event.setEventTimestamp(LocalDateTime.now());
-            }
+            // ⏰ Sử dụng server timestamp thay vì ESP32 timestamp
+            // (ESP32 không có RTC, chỉ gửi millis() - uptime since boot)
+            event.setEventTimestamp(LocalDateTime.now());
 
             event.setSeverity("WARNING");
-            event.setNotes("Vibration detected via MQTT");
+            event.setNotes("AI Attack Detected - Confidence: " +
+                    (sensorData.getConfidence() != null ? String.format("%.1f%%", sensorData.getConfidence() * 100)
+                            : "N/A"));
 
             VibrationEvent savedEvent = eventRepository.save(event);
             log.info("✅ Vibration event saved: ID={}, Device={}, Time={}",
