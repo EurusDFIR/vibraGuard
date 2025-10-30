@@ -45,6 +45,13 @@ public class MqttConfig {
 
     @Bean
     public MessageProducer inbound() {
+        System.out.println("===============================================");
+        System.out.println("🔧 Configuring MQTT Inbound Adapter");
+        System.out.println("📡 Broker URL: " + brokerUrl);
+        System.out.println("🆔 Client ID: " + clientId + "-inbound");
+        System.out.println("📢 Subscribe Topic: " + sensorTopic);
+        System.out.println("===============================================");
+
         MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter(
                 clientId + "-inbound",
                 mqttClientFactory(),
@@ -56,11 +63,16 @@ public class MqttConfig {
         return adapter;
     }
 
+    // 🧪 TEMPORARY: Enable debug handler to test MQTT receipt
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
-    public MessageHandler handler() {
+    public MessageHandler debugHandler() {
         return message -> {
-            System.out.println("Received MQTT message: " + message.getPayload());
+            System.out.println("===============================================");
+            System.out.println("🔥 DEBUG HANDLER: MQTT Message Received!");
+            System.out.println("📦 Payload: " + message.getPayload());
+            System.out.println("📋 Headers: " + message.getHeaders());
+            System.out.println("===============================================");
         };
     }
 }
