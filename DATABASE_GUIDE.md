@@ -12,9 +12,11 @@
 Host: 34.87.133.103
 Port: 5432
 Database: vibraguard_db
-Username: vibraguard_user
-Password: vibraguard_pass
+Username: <your-username>
+Password: <your-password>
 ```
+
+> **Security Note:** Never commit actual credentials to version control. Use environment variables, secrets management systems (e.g., GCP Secret Manager), or secure configuration files that are properly gitignored.
 
 ---
 
@@ -29,7 +31,7 @@ gcloud compute ssh vibraguard-server --zone=asia-southeast1-b
 ### Bước 2: Kết nối PostgreSQL
 
 ```bash
-docker exec -it postgres psql -U vibraguard_user -d vibraguard_db
+docker exec -it postgres psql -U <your-username> -d vibraguard_db
 ```
 
 ### Bước 3: Thoát khi xong
@@ -54,8 +56,8 @@ gcloud compute firewall-rules create allow-postgres \
 ### Bước 2: Kết nối bằng psql
 
 ```bash
-psql -h 34.87.133.103 -p 5432 -U vibraguard_user -d vibraguard_db
-# Nhập password: vibraguard_pass
+psql -h 34.87.133.103 -p 5432 -U <your-username> -d vibraguard_db
+# Nhập password khi được yêu cầu: <your-password>
 ```
 
 ---
@@ -70,8 +72,8 @@ psql -h 34.87.133.103 -p 5432 -U vibraguard_user -d vibraguard_db
    - Host: `34.87.133.103`
    - Port: `5432`
    - Database: `vibraguard_db`
-   - Username: `myuser`
-   - Password: `mypassword`
+   - Username: `<your-username>`
+   - Password: `<your-password>`
 4. **Test Connection** → **Finish**
 
 ### pgAdmin
@@ -82,8 +84,8 @@ psql -h 34.87.133.103 -p 5432 -U vibraguard_user -d vibraguard_db
    - Host: `34.87.133.103`
    - Port: `5432`
    - Database: `vibraguard_db`
-   - Username: `vibraguard_user`
-   - Password: `vibraguard_pass`
+   - Username: `<your-username>`
+   - Password: `<your-password>`
 
 ---
 
@@ -258,7 +260,7 @@ ORDER BY tablename, indexname;
 gcloud compute ssh vibraguard-server --zone=asia-southeast1-b
 
 # Backup
-docker exec postgres pg_dump -U vibraguard_user vibraguard_db > backup_$(date +%Y%m%d).sql
+docker exec postgres pg_dump -U <your-username> vibraguard_db > backup_$(date +%Y%m%d).sql
 
 # Download về máy local
 gcloud compute scp vibraguard-server:~/backup_*.sql ./ --zone=asia-southeast1-b
@@ -274,7 +276,7 @@ gcloud compute scp backup_20250131.sql vibraguard-server:~/ --zone=asia-southeas
 gcloud compute ssh vibraguard-server --zone=asia-southeast1-b
 
 # Restore
-docker exec -i postgres psql -U vibraguard_user vibraguard_db < backup_20250131.sql
+docker exec -i postgres psql -U <your-username> vibraguard_db < backup_20250131.sql
 ```
 
 ---
