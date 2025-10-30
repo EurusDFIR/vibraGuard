@@ -37,7 +37,7 @@ const char *WIFI_SSID = "LE HUNG";
 const char *WIFI_PASSWORD = "123456789";
 
 // MQTT Broker
-const char *MQTT_SERVER = "192.168.1.2"; // IP máy chạy Mosquitto
+const char *MQTT_SERVER = "34.87.133.103"; // IP máy chạy Mosquitto
 const int MQTT_PORT = 1883;
 const char *DEVICE_ID = "ESP32_CUA_SO_01";
 
