@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  </head>
+  <body>
+    <h1>Quick Test - Check Console (F12)</h1>
+    <div id="status">Connecting...</div>
+
+    <script>
+      const BACKEND_URL = "http://34.87.133.103:8080";
+      const WS_URL = `${BACKEND_URL}/ws`;
+
+      console.log("🔌 Connecting to:", WS_URL);
+
+      const socket = new SockJS(WS_URL);
+      const client = Stomp.over(socket);
+
+      // Disable STOMP debug (too verbose)
+      client.debug = null;
+
+      client.connect(
+        {},
+        (frame) => {
+          console.log("✅ CONNECTED!", frame);
+          document.getElementById("status").innerHTML = "✅ Connected!";
+          document.getElementById("status").style.color = "green";
+
+          client.subscribe("/topic/alerts", (message) => {
+            console.log("🚨 Alert received:", message.body);
+            const alert = JSON.parse(message.body);
+            console.log("Alert data:", alert);
+
+            // Display alert on page
+            const alertDiv = document.createElement("div");
+            alertDiv.style.background = "#d4edda";
+            alertDiv.style.padding = "10px";
+            alertDiv.style.margin = "10px 0";
+            alertDiv.style.borderRadius = "5px";
+            alertDiv.innerHTML = `
+                        <strong>Alert!</strong><br>
+                        Device: ${alert.deviceId}<br>
+                        Type: ${alert.vibrationType}<br>
+                        Confidence: ${alert.aiConfidence}%
+                    `;
+            document.body.appendChild(alertDiv);
+          });
+
+          console.log("📡 Subscribed to /topic/alerts");
+        },
+        (error) => {
+          console.error("❌ Connection error:", error);
+          document.getElementById("status").innerHTML = "❌ Connection Failed";
+          document.getElementById("status").style.color = "red";
+        }
+      );
+
+      socket.onclose = () => {
+        console.log("👋 Socket closed");
+      };
+
+      socket.onerror = (error) => {
+        console.error("❌ Socket error:", error);
+      };
+    </script>
+  </body>
+</html>

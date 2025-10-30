@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Test - VibraGuard</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f0f0f0;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #667eea;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .connected {
+        background: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+      #logs {
+        background: #2d2d2d;
+        color: #0f0;
+        padding: 15px;
+        border-radius: 5px;
+        height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        margin-top: 20px;
+      }
+      .log-entry {
+        margin: 5px 0;
+        border-bottom: 1px solid #444;
+        padding-bottom: 5px;
+      }
+      .timestamp {
+        color: #888;
+      }
+      .error {
+        color: #ff6b6b;
+      }
+      .success {
+        color: #51cf66;
+      }
+      .info {
+        color: #74c0fc;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #5568d3;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      input {
+        padding: 8px;
+        width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .controls {
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔌 VibraGuard WebSocket Test</h1>
+
+      <div class="controls">
+        <label>Backend URL:</label><br />
+        <input type="text" id="backendUrl" value="http://34.87.133.103:8080" />
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+      </div>
+
+      <div id="status" class="status disconnected">❌ Disconnected</div>
+
+      <h3>Connection Logs:</h3>
+      <div id="logs"></div>
+    </div>
+
+    <script>
+      let stompClient = null;
+      let socket = null;
+
+      function log(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const logsDiv = document.getElementById("logs");
+        const entry = document.createElement("div");
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+        logsDiv.appendChild(entry);
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+      }
+
+      function updateStatus(message, className) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${className}`;
+      }
+
+      function connect() {
+        const backendUrl = document.getElementById("backendUrl").value;
+        const wsUrl = `${backendUrl}/ws`;
+
+        log(`🔄 Attempting to connect to: ${wsUrl}`, "info");
+        updateStatus("🔄 Connecting...", "connecting");
+
+        try {
+          socket = new SockJS(wsUrl);
+
+          socket.onopen = function () {
+            log("✅ SockJS connection opened", "success");
+          };
+
+          socket.onclose = function () {
+            log("❌ SockJS connection closed", "error");
+          };
+
+          socket.onerror = function (error) {
+            log(`❌ SockJS error: ${JSON.stringify(error)}`, "error");
+          };
+
+          stompClient = Stomp.over(socket);
+
+          // Enable debug for STOMP
+          stompClient.debug = function (str) {
+            log(`[STOMP] ${str}`, "info");
+          };
+
+          stompClient.connect(
+            {},
+            function (frame) {
+              log("✅ STOMP connected successfully!", "success");
+              log(`Frame: ${frame}`, "info");
+              updateStatus("✅ Connected", "connected");
+
+              // Subscribe to alerts topic
+              stompClient.subscribe("/topic/alerts", function (message) {
+                log("🚨 Alert received!", "success");
+                log(`Message body: ${message.body}`, "info");
+
+                try {
+                  const alert = JSON.parse(message.body);
+                  log(
+                    `📊 Parsed alert: Device=${alert.deviceId}, Type=${alert.vibrationType}, Confidence=${alert.aiConfidence}%`,
+                    "success"
+                  );
+                } catch (e) {
+                  log(`❌ Failed to parse alert: ${e.message}`, "error");
+                }
+              });
+
+              log("📡 Subscribed to /topic/alerts", "success");
+            },
+            function (error) {
+              log(`❌ STOMP connection error: ${error}`, "error");
+              updateStatus("❌ Connection Failed", "disconnected");
+            }
+          );
+        } catch (error) {
+          log(`❌ Connection error: ${error.message}`, "error");
+          updateStatus("❌ Connection Failed", "disconnected");
+        }
+      }
+
+      function disconnect() {
+        if (stompClient !== null) {
+          stompClient.disconnect(function () {
+            log("👋 Disconnected from server", "info");
+            updateStatus("❌ Disconnected", "disconnected");
+          });
+        }
+        stompClient = null;
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "";
+      }
+
+      // Auto-connect on load
+      window.onload = function () {
+        log("🚀 WebSocket Test Tool loaded", "success");
+        log('ℹ️  Click "Connect" to test WebSocket connection', "info");
+      };
+
+      // Clean disconnect on page unload
+      window.onbeforeunload = function () {
+        disconnect();
+      };
+    </script>
+  </body>
+</html>

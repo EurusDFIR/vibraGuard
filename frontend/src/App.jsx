@@ -11,7 +11,7 @@ import {
 import './App.css'
 
 // Cấu hình Backend URL
-const BACKEND_URL = 'http://localhost:8080'
+const BACKEND_URL = 'http://34.87.133.103:8080'
 const WS_URL = `${BACKEND_URL}/ws`
 
 // Colors
@@ -214,20 +214,26 @@ function App() {
 
   const handleArm = async () => {
     try {
-      await axios.post(`${BACKEND_URL}/api/control/arm`)
+      console.log('🔒 ARM button clicked - sending request...')
+      const response = await axios.post(`${BACKEND_URL}/api/control/arm`)
+      console.log('✅ ARM response:', response.data)
       toast.success('✅ System ARMED')
       fetchSystemStatus()
     } catch (error) {
+      console.error('❌ ARM error:', error)
       toast.error('❌ Failed to ARM system')
     }
   }
 
   const handleDisarm = async () => {
     try {
-      await axios.post(`${BACKEND_URL}/api/control/disarm`)
+      console.log('🔓 DISARM button clicked - sending request...')
+      const response = await axios.post(`${BACKEND_URL}/api/control/disarm`)
+      console.log('✅ DISARM response:', response.data)
       toast.success('✅ System DISARMED')
       fetchSystemStatus()
     } catch (error) {
+      console.error('❌ DISARM error:', error)
       toast.error('❌ Failed to DISARM system')
     }
   }

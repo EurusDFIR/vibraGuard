@@ -1,6 +1,8 @@
 # 🚀 KHỞI ĐỘNG NHANH - VIBRAGUARD
 
-## ⚡ CHẠY HỆ THỐNG
+## 🌐 MÔI TRƯỜNG
+
+### 💻 LOCAL (Development)
 
 ```bash
 # Backend
@@ -12,6 +14,21 @@ cd frontend && npm run dev
 # Mobile Flutter
 cd vibraguard_app && flutter run -d emulator-5554
 ```
+
+### ☁️ GCP (Production) - ĐÃ DEPLOY
+
+```bash
+# Server đang chạy tại: 34.87.133.103
+# Backend API: http://34.87.133.103:8080
+
+# Chỉ cần chạy Frontend & Mobile:
+cd frontend && npm run dev
+cd vibraguard_app && flutter run -d emulator-5554
+```
+
+**Chi tiết:** Xem file `GCP_HUONG_DAN_CHAY.md`
+
+---
 
 ## 📝 FILE QUAN TRỌNG
 

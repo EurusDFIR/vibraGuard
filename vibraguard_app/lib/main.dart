@@ -35,7 +35,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  static const String backendUrl = 'http://10.0.2.2:8080';
+  static const String backendUrl = 'http://34.87.133.103:8080';
 
   List<Map<String, dynamic>> history = [];
   String systemStatus = 'UNKNOWN';

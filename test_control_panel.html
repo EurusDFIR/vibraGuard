@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #667EEA; }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-arm {
+            background: #51cf66;
+            color: white;
+        }
+        .btn-arm:hover { background: #40c057; }
+        .btn-disarm {
+            background: #ffa502;
+            color: white;
+        }
+        .btn-disarm:hover { background: #ff9100; }
+        .btn-panic {
+            background: #ff4757;
+            color: white;
+        }
+        .btn-panic:hover { background: #ee3344; }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #f0f0f0;
+        }
+        #logs {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Control Panel Test</h1>
+        
+        <div class="status" id="status">
+            <strong>Status:</strong> <span id="systemStatus">Loading...</span><br>
+            <strong>Devices:</strong> <span id="devicesCount">-</span>
+        </div>
+        
+        <button class="btn-arm" onclick="armSystem()">🔔 ARM System</button>
+        <button class="btn-disarm" onclick="disarmSystem()">🔕 DISARM System</button>
+        <button class="btn-panic" onclick="panicButton()">🚨 PANIC ALARM</button>
+        
+        <h3>Logs:</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://34.87.133.103:8080';
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logsDiv = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.style.color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#74c0fc';
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/control/status`);
+                const data = await response.json();
+                document.getElementById('systemStatus').textContent = data.systemStatus;
+                document.getElementById('devicesCount').textContent = data.devicesCount;
+                log(`Status: ${data.systemStatus}, Devices: ${data.devicesCount}`, 'info');
+            } catch (error) {
+                log(`Error fetching status: ${error.message}`, 'error');
+            }
+        }
+        
+        async function armSystem() {
+            try {
+                log('Sending ARM command...', 'info');
+                const response = await fetch(`${BACKEND_URL}/api/control/arm`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                log(`✅ ${data.message}`, 'success');
+                fetchStatus();
+            } catch (error) {
+                log(`❌ ARM failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function disarmSystem() {
+            try {
+                log('Sending DISARM command...', 'info');
+                const response = await fetch(`${BACKEND_URL}/api/control/disarm`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                log(`✅ ${data.message}`, 'success');
+                fetchStatus();
+            } catch (error) {
+                log(`❌ DISARM failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function panicButton() {
+            try {
+                log('🚨 PANIC BUTTON - Sending SOUND_ALARM...', 'info');
+                const response = await fetch(`${BACKEND_URL}/api/control/sound_alarm`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                log(`✅ ${data.message}`, 'success');
+            } catch (error) {
+                log(`❌ PANIC failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-fetch status on load
+        fetchStatus();
+        
+        // Refresh status every 5 seconds
+        setInterval(fetchStatus, 5000);
+        
+        log('🚀 Control Panel loaded', 'success');
+    </script>
+</body>
+</html>
