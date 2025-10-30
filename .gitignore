@@ -47,3 +47,5 @@ mosquitto-log/
 *.bak
 *.backup
 *~
+
+DATABASE_GUIDE.md

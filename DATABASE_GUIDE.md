@@ -70,8 +70,8 @@ psql -h 34.87.133.103 -p 5432 -U vibraguard_user -d vibraguard_db
    - Host: `34.87.133.103`
    - Port: `5432`
    - Database: `vibraguard_db`
-   - Username: `vibraguard_user`
-   - Password: `vibraguard_pass`
+   - Username: `myuser`
+   - Password: `mypassword`
 4. **Test Connection** → **Finish**
 
 ### pgAdmin
