@@ -1,4 +1,5 @@
 # 🎯 GCP System Health Check Report
+
 **Date:** November 2, 2025  
 **GCP Server:** 34.87.133.103 (vibraguard-server)  
 **Status:** ✅ **FULLY OPERATIONAL**
@@ -14,6 +15,7 @@ Toàn bộ hệ thống VibraGuard trên Google Cloud Platform đã được ki�
 ## ✅ System Components Status
 
 ### 1. GCP Virtual Machine
+
 **Status:** ✅ RUNNING
 
 ```
@@ -26,28 +28,32 @@ Uptime: 35+ hours
 ```
 
 ### 2. Docker Containers
+
 **Status:** ✅ ALL RUNNING
 
-| Container | Image | Status | Uptime | Ports |
-|-----------|-------|--------|--------|-------|
-| backend | vibraguard-prod_backend | Up | 31 hours | 8080 |
-| postgres | postgres:14-alpine | Up | 35 hours | 5432 |
-| mosquitto | eclipse-mosquitto | Up | 35 hours | 1883 |
+| Container | Image                   | Status | Uptime   | Ports |
+| --------- | ----------------------- | ------ | -------- | ----- |
+| backend   | vibraguard-prod_backend | Up     | 31 hours | 8080  |
+| postgres  | postgres:14-alpine      | Up     | 35 hours | 5432  |
+| mosquitto | eclipse-mosquitto       | Up     | 35 hours | 1883  |
 
 ---
 
 ## 🗄️ Database Status
 
 ### PostgreSQL Database
+
 **Status:** ✅ OPERATIONAL
 
 **Configuration:**
+
 - Host: 34.87.133.103:5432
 - Database: vibraguard_db
 - User: vibraguard_user
 - Tables: 2 (devices, vibration_events)
 
 **Data Summary:**
+
 ```sql
 Total Events: 26
 Latest Event: 2025-11-02 05:43:08 (ESP32_TEST_GCP)
@@ -63,6 +69,7 @@ Device Name: Auto-created: ESP32_CUA_SO_01
 | 24 | ESP32_CUA_SO_01 | 1 | WARNING | 2025-10-31 14:39:17 |
 
 **Schema:**
+
 ```sql
 Table: vibration_events
 - id (bigint, PK)
@@ -86,14 +93,17 @@ Table: devices
 ## 📡 MQTT Broker Status
 
 ### Mosquitto MQTT
+
 **Status:** ✅ OPERATIONAL
 
 **Configuration:**
+
 - Host: 34.87.133.103:1883
 - Topics: vibra_guard/sensor, vibra_guard/control
 - Protocol: MQTT v3.1.1
 
 **Test Results:**
+
 ```
 ✅ Connection: SUCCESS
 ✅ Publish: SUCCESS
@@ -102,6 +112,7 @@ Table: devices
 ```
 
 **Test Message:**
+
 ```json
 {
   "deviceId": "ESP32_TEST_GCP",
@@ -122,15 +133,19 @@ Table: devices
 ## 🖥️ Backend API Status
 
 ### Spring Boot Backend
+
 **Status:** ✅ OPERATIONAL
 
 **Endpoints Tested:**
 
 #### 1. Control Status
+
 ```http
 GET http://34.87.133.103:8080/api/control/status
 ```
+
 **Response:**
+
 ```json
 {
   "devicesCount": 1,
@@ -138,13 +153,17 @@ GET http://34.87.133.103:8080/api/control/status
   "timestamp": 1762038xxx
 }
 ```
+
 ✅ Status Code: 200 OK
 
 #### 2. Events List
+
 ```http
 GET http://34.87.133.103:8080/api/events
 ```
+
 **Response:**
+
 ```json
 [
   {
@@ -157,6 +176,7 @@ GET http://34.87.133.103:8080/api/events
   ...
 ]
 ```
+
 ✅ Status Code: 200 OK
 ✅ Total Events: 26
 
@@ -165,9 +185,11 @@ GET http://34.87.133.103:8080/api/events
 ## 📱 Twilio Integration Status
 
 ### SMS & Voice Alerts
+
 **Status:** ⚠️ CONFIGURED (Trial Account Limitation)
 
 **Configuration:**
+
 ```
 ✅ Twilio SDK: Initialized Successfully
 ✅ Account SID: ACa12a40c4... (configured)
@@ -177,6 +199,7 @@ GET http://34.87.133.103:8080/api/events
 ```
 
 **Test Results:**
+
 ```
 ✅ Alert Triggered: SUCCESS
 ✅ SMS Attempt: SUCCESS (but unverified)
@@ -185,6 +208,7 @@ GET http://34.87.133.103:8080/api/events
 ```
 
 **Backend Logs:**
+
 ```
 ✅ Twilio initialized successfully
 📨 Sending SMS to 1 recipients
@@ -194,6 +218,7 @@ GET http://34.87.133.103:8080/api/events
 ```
 
 **Action Required:**
+
 1. Verify phone number at: https://console.twilio.com/us1/develop/phone-numbers/manage/verified
 2. Or upgrade to Twilio paid account
 
@@ -204,9 +229,11 @@ GET http://34.87.133.103:8080/api/events
 ## 🔄 End-to-End Message Flow
 
 ### Complete System Flow Test
+
 **Status:** ✅ VERIFIED
 
 **Flow Diagram:**
+
 ```
 ESP32/MQTT Client
     ↓ publish to vibra_guard/sensor
@@ -223,6 +250,7 @@ Frontend/Mobile App
 ```
 
 **Test Execution:**
+
 1. ✅ Published test message to MQTT
 2. ✅ Backend received and processed message
 3. ✅ Event saved to database (ID: 26)
@@ -236,9 +264,11 @@ Frontend/Mobile App
 ## 🌐 WebSocket Status
 
 ### Real-time Alerts
+
 **Status:** ⚠️ MANUAL TEST REQUIRED
 
 **Configuration:**
+
 - Endpoint: ws://34.87.133.103:8080/ws
 - Topic: /topic/alerts
 - Protocol: STOMP over WebSocket
@@ -254,12 +284,14 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 ## 📈 Performance Metrics
 
 ### Response Times
+
 - Backend API: < 100ms
 - Database Query: < 50ms
 - MQTT Publish: < 10ms
 - End-to-End Flow: ~3 seconds
 
 ### Resource Usage (GCP VM)
+
 - CPU: Low
 - Memory: Adequate
 - Network: Stable
@@ -270,9 +302,11 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 ## 🔍 Detailed Test Results
 
 ### Automated Test Script
+
 **File:** `tests/integration/test_gcp_system.py`
 
 **Results:**
+
 ```
 ======================================================================
   🚀 VIBRAGUARD GCP SYSTEM HEALTH CHECK
@@ -299,18 +333,21 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 ## ⚠️ Known Issues & Limitations
 
 ### 1. Twilio Trial Account
+
 **Issue:** SMS/Voice alerts blocked for unverified numbers  
 **Impact:** Low (system functionality verified)  
 **Solution:** Verify phone number or upgrade account  
 **Status:** Non-blocking
 
 ### 2. WebSocket Testing
+
 **Issue:** Requires manual browser testing  
 **Impact:** None (automated tests passed)  
 **Solution:** Use test_websocket.html for verification  
 **Status:** Optional
 
 ### 3. Environment Variables on GCP
+
 **Issue:** Backend may not have Twilio env vars set  
 **Impact:** None currently (hardcoded in build)  
 **Solution:** Set environment variables in production deployment  
@@ -327,19 +364,21 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 ✅ **AI Detection:** Confidence scoring working (95%, 98% detected)  
 ✅ **Alert System:** Twilio integration configured (pending verification)  
 ✅ **Real-time Updates:** WebSocket endpoint available  
-✅ **Multi-device Support:** Device management functional  
+✅ **Multi-device Support:** Device management functional
 
 ---
 
 ## 📝 Recommendations
 
 ### Immediate Actions
+
 1. ✅ **System Verification:** Completed - All working
 2. ⚠️ **Twilio Number:** Verify +84399354603 for production use
 3. 📱 **Mobile App Test:** Deploy and test Flutter app with GCP endpoint
 4. 🔧 **Environment Variables:** Update GCP deployment with proper env vars
 
 ### Future Improvements
+
 1. **Monitoring:** Add Prometheus/Grafana for system monitoring
 2. **Backups:** Implement automated database backups
 3. **Scaling:** Consider load balancing for high traffic
@@ -357,9 +396,10 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 **API Endpoints:** Functional  
 **Database:** Stable and accessible  
 **MQTT Broker:** Processing messages  
-**Alerts:** Configured (pending phone verification)  
+**Alerts:** Configured (pending phone verification)
 
 ### Deployment Checklist
+
 - [x] GCP VM running
 - [x] Docker containers up
 - [x] Database accessible
@@ -379,9 +419,10 @@ When attack detected (confidence >= 80%), WebSocket broadcasts alert to all conn
 **GCP Project:** zero-dawn-473705  
 **VM Name:** vibraguard-server  
 **Zone:** asia-southeast1-b  
-**External IP:** 34.87.133.103  
+**External IP:** 34.87.133.103
 
 **Access Commands:**
+
 ```bash
 # SSH to VM
 gcloud compute ssh vibraguard-server --zone=asia-southeast1-b
@@ -406,7 +447,7 @@ Hệ thống VibraGuard trên GCP **hoạt động hoàn hảo** với tất c�
 ✅ **Database:** Lưu trữ dữ liệu chính xác  
 ✅ **MQTT:** Nhận và forward messages  
 ✅ **API:** Trả về data đúng  
-✅ **Twilio:** Configured (cần verify số điện thoại)  
+✅ **Twilio:** Configured (cần verify số điện thoại)
 
 **Hệ thống sẵn sàng cho production deployment sau khi verify Twilio phone number!** 🎉
 
