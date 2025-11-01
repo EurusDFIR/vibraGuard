@@ -62,17 +62,4 @@ public class MqttConfig {
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }
-
-    // 🧪 TEMPORARY: Enable debug handler to test MQTT receipt
-    @Bean
-    @ServiceActivator(inputChannel = "mqttInputChannel")
-    public MessageHandler debugHandler() {
-        return message -> {
-            System.out.println("===============================================");
-            System.out.println("🔥 DEBUG HANDLER: MQTT Message Received!");
-            System.out.println("📦 Payload: " + message.getPayload());
-            System.out.println("📋 Headers: " + message.getHeaders());
-            System.out.println("===============================================");
-        };
-    }
 }

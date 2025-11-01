@@ -25,6 +25,7 @@ public class MqttSubscriberService {
     private final DeviceRepository deviceRepository;
     private final ObjectMapper objectMapper;
     private final SimpMessagingTemplate messagingTemplate; // WebSocket để gửi alerts
+    private final TwilioService twilioService; // Twilio SMS & Voice alerts
 
     @ServiceActivator(inputChannel = "mqttInputChannel")
     @Transactional
@@ -69,6 +70,23 @@ public class MqttSubscriberService {
                     savedEvent.getId(),
                     device.getDeviceId(),
                     savedEvent.getEventTimestamp());
+
+            // **KIỂM TRA ATTACK VÀ GỬI CẢNH BÁO**
+            boolean isAttackDetected = sensorData.getAiTriggered() != null && sensorData.getAiTriggered();
+            double confidence = sensorData.getConfidence() != null ? sensorData.getConfidence() * 100 : 0;
+
+            if (isAttackDetected && confidence >= 80.0) {
+                log.warn("🚨🚨🚨 ATTACK DETECTED! Device: {}, Confidence: {}%",
+                        sensorData.getDeviceId(), confidence);
+
+                // Gửi cảnh báo đa kênh
+                try {
+                    twilioService.sendFullAlert(sensorData.getDeviceId(), confidence);
+                    log.info("📱 Emergency alerts sent via Twilio (SMS + Call)");
+                } catch (Exception twilioError) {
+                    log.error("❌ Failed to send Twilio alerts: {}", twilioError.getMessage());
+                }
+            }
 
             // **GỬI ALERT QUA WEBSOCKET** đến tất cả client đang kết nối
             sendWebSocketAlert(sensorData, savedEvent);
