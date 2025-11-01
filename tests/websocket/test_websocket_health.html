@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Health Check</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+        background: #f0f0f0;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      #log {
+        background: white;
+        padding: 10px;
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 VibraGuard WebSocket Health Check</h1>
+    <div id="status" class="status info">⏳ Connecting...</div>
+    <h3>📝 Connection Log:</h3>
+    <div id="log"></div>
+
+    <script>
+      const log = document.getElementById("log");
+      const status = document.getElementById("status");
+
+      function addLog(message, type = "info") {
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `<div style="color: ${
+          type === "error" ? "red" : type === "success" ? "green" : "black"
+        }">[${time}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      addLog("🔌 Connecting to ws://34.87.133.103:8080/ws");
+
+      const socket = new SockJS("http://34.87.133.103:8080/ws");
+      const stompClient = Stomp.over(socket);
+
+      stompClient.connect(
+        {},
+        function (frame) {
+          addLog("✅ WebSocket connected!", "success");
+          status.className = "status success";
+          status.textContent = "✅ WebSocket Connected";
+
+          stompClient.subscribe("/topic/alerts", function (alert) {
+            const data = JSON.parse(alert.body);
+            addLog("🚨 ALERT RECEIVED: " + JSON.stringify(data), "success");
+            alert(
+              "🚨 ALERT: " +
+                data.deviceId +
+                " - Confidence: " +
+                (data.confidence * 100).toFixed(1) +
+                "%"
+            );
+          });
+
+          addLog("📡 Subscribed to /topic/alerts", "success");
+        },
+        function (error) {
+          addLog("❌ Connection error: " + error, "error");
+          status.className = "status error";
+          status.textContent = "❌ Connection Failed";
+        }
+      );
+    </script>
+  </body>
+</html>

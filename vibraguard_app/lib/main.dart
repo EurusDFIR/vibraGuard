@@ -449,9 +449,10 @@ class _HomePageState extends State<HomePage>
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.3,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.5, // Increased from 1.3 to prevent overflow
+      padding: EdgeInsets.zero, // Remove default padding
       children: [
         _buildStatCard(
           '📊',
@@ -483,7 +484,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildStatCard(String icon, String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12), // Reduced from 16
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -503,22 +504,25 @@ class _HomePageState extends State<HomePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 32)),
+          Text(icon, style: const TextStyle(fontSize: 28)), // Reduced from 32
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 24, // Reduced from 28
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2), // Reduced from 4
               Text(
                 label,
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                ), // Reduced from 12
               ),
             ],
           ),
