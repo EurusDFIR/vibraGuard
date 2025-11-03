@@ -5,6 +5,7 @@ backend/target/
 backend/.mvn/
 backend/mvnw
 backend/mvnw.cmd
+backend/BOOT-INF/
 
 # IDE
 .idea/

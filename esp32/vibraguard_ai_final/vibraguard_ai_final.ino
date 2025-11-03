@@ -33,10 +33,10 @@
 // Thay đổi các giá trị này theo môi trường của bạn
 
 // WiFi
-const char *WIFI_SSID = "LE HUNG";
-const char *WIFI_PASSWORD = "123456789";
+const char *WIFI_SSID = "Yamate";
+const char *WIFI_PASSWORD = "kudasaii";
 
-// MQTT Broker
+// MQTT BrokerAR
 const char *MQTT_SERVER = "34.87.133.103"; // IP máy chạy Mosquitto
 const int MQTT_PORT = 1883;
 const char *DEVICE_ID = "ESP32_CUA_SO_01";
