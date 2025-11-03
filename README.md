@@ -85,31 +85,31 @@ By processing AI inference **at the edge** (1ms latency), VibraGuard achieves:
 
 ![System Architecture Diagram](docs/assets/architecture/architecture_diagram.png)
 
-*Complete system architecture showing ESP32 edge device, MQTT broker, Spring Boot backend, and multi-platform clients*
+_Complete system architecture showing ESP32 edge device, MQTT broker, Spring Boot backend, and multi-platform clients_
 
 ### 🔄 Data Flow & Deployment
 
 ![Deployment Flow Diagram](docs/assets/diagrams/deployment_flow_diagram.png)
 
-*Data flow from sensor capture to alert delivery across all system components*
+_Data flow from sensor capture to alert delivery across all system components_
 
 ### 🗄️ Database Schema
 
 ![Entity Relationship Diagram](docs/assets/diagrams/er_diagram.png)
 
-*Database schema showing vibration events, device management, and alert history tables*
+_Database schema showing vibration events, device management, and alert history tables_
 
 ### 📡 IoT Communication
 
 ![IoT System Diagram](docs/assets/hardware/iot_diagram.png)
 
-*IoT hardware connections and communication protocols between ESP32, sensors, and cloud services*
+_IoT hardware connections and communication protocols between ESP32, sensors, and cloud services_
 
 ### 🔄 Sequence Diagrams
 
 ![Attack Detection Sequence](docs/assets/diagrams/sequence_diagram.png)
 
-*Sequence diagram showing the complete attack detection and alert notification flow*
+_Sequence diagram showing the complete attack detection and alert notification flow_
 
 ---
 
@@ -213,8 +213,8 @@ python test_system_complete.py
 | [🧪 Testing](docs/TESTING_GUIDE.md)               | Test suites and validation            |
 | [📱 Flutter Guide](docs/guides/FLUTTER_GUIDE.md)  | Mobile app development                |
 | [🌐 WebSocket](docs/WEBSOCKET_TROUBLESHOOTING.md) | Real-time communication               |
-| [� Assets Guide](docs/ASSETS_GUIDE.md)           | Image and diagram management          |
-| [�📊 Final Report](docs/reports/Report_final.md)   | Complete academic report              |
+| [🫠 Assets Guide](docs/ASSETS_GUIDE.md)            | Image and diagram management          |
+| [👽 Final Report](docs/reports/Report_final.md)   | Complete academic report              |
 
 ---
 
