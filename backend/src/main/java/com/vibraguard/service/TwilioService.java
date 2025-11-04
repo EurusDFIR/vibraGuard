@@ -108,9 +108,18 @@ public class TwilioService {
         // Gửi SMS
         sendSmsToAll(smsMessage);
 
-        // Gọi điện (delay 1 giây để tránh rate limit) - use CompletableFuture for non-blocking delay
-        CompletableFuture.delayedExecutor(1, java.util.concurrent.TimeUnit.SECONDS)
-                .execute(this::makeCallToAll);
+        // Gọi điện (delay 1 giây để tránh rate limit) - use CompletableFuture for non-blocking delay with exception handling
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1000);
+                makeCallToAll();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("⚠️ Interrupted while waiting to make calls", e);
+            } catch (Exception e) {
+                log.error("❌ Error making calls: {}", e.getMessage(), e);
+            }
+        });
     }
 
     /**

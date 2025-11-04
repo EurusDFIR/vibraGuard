@@ -125,15 +125,22 @@ public class ControlService {
             log.error("❌ Failed to send MQTT command: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send MQTT command", e);
         } finally {
-            if (client != null) {
-                try {
-                    if (client.isConnected()) {
-                        client.disconnect();
-                    }
-                    client.close();
-                } catch (MqttException e) {
-                    log.warn("⚠️ Error closing MQTT client: {}", e.getMessage());
+            cleanupMqttClient(client);
+        }
+    }
+
+    /**
+     * Cleanup MQTT client resources
+     */
+    private void cleanupMqttClient(MqttClient client) {
+        if (client != null) {
+            try {
+                if (client.isConnected()) {
+                    client.disconnect();
                 }
+                client.close();
+            } catch (MqttException e) {
+                log.warn("⚠️ Error closing MQTT client: {}", e.getMessage());
             }
         }
     }
