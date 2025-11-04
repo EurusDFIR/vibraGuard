@@ -6,6 +6,7 @@ No need for mosquitto_pub command line tool
 
 import json
 import time
+import os
 from datetime import datetime, timezone
 import sys
 
@@ -27,10 +28,11 @@ except ImportError:
         print("\nPlease install manually: pip install paho-mqtt")
         sys.exit(1)
 
-MQTT_HOST = "34.87.133.103"
-MQTT_PORT = 1883
-MQTT_TOPIC = "vibra_guard/sensor"  # Changed to match backend subscription
-BACKEND_URL = f"http://{MQTT_HOST}:8080"
+# Configuration from environment variables with fallback defaults
+MQTT_HOST = os.getenv("MQTT_HOST", "34.87.133.103")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibra_guard/sensor")  # Changed to match backend subscription
+BACKEND_URL = os.getenv("BACKEND_URL", f"http://{MQTT_HOST}:8080")
 
 def create_test_message(device_id="ESP32_CUA_SO_01"):
     """Create a test sensor data message matching backend DTO"""
@@ -196,8 +198,8 @@ def main():
         print("\n❌ Failed to send MQTT message")
         print("\n🔧 Alternative: Use MQTT Explorer GUI")
         print("   Download: http://mqtt-explorer.com/")
-        print("   Connect to: 34.87.133.103:1883")
-        print("   Publish to: vibraguard/sensor_data")
+        print(f"   Connect to: {MQTT_HOST}:{MQTT_PORT}")
+        print(f"   Publish to: {MQTT_TOPIC}")
         print("   Use this JSON:")
         print(json.dumps(message, indent=2))
     

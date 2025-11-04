@@ -7,9 +7,11 @@ Gửi test message để trigger Twilio alert
 import requests
 import json
 import time
+import os
 
-GCP_IP = "34.87.133.103"
-BACKEND_URL = f"http://{GCP_IP}:8080"
+# Configuration from environment variables with fallback defaults
+GCP_IP = os.getenv("GCP_IP", "34.87.133.103")
+BACKEND_URL = os.getenv("BACKEND_URL", f"http://{GCP_IP}:8080")
 
 def test_twilio_trigger():
     """Trigger Twilio alert by sending high confidence attack"""

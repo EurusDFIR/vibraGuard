@@ -23,7 +23,6 @@ function App() {
   const [systemStatus, setSystemStatus] = useState('UNKNOWN')
   const [connected, setConnected] = useState(false)
   const [devicesCount, setDevicesCount] = useState(0)
-  const [stompClient, setStompClient] = useState(null)
   const [activeTab, setActiveTab] = useState('dashboard')
   
   // Statistics
@@ -46,7 +45,7 @@ function App() {
 
     client.connect(
       {},
-      (frame) => {
+      () => {
         console.log('✅ WebSocket connected')
         setConnected(true)
 
@@ -95,8 +94,6 @@ function App() {
       }
     )
 
-    setStompClient(client)
-
     if (Notification.permission === 'default') {
       Notification.requestPermission()
     }
@@ -133,63 +130,63 @@ function App() {
 
   // Calculate statistics when history changes
   useEffect(() => {
+    const calculateStats = () => {
+      if (history.length === 0) return
+
+      const today = new Date().toDateString()
+      const todayEvents = history.filter(e => 
+        new Date(e.eventTimestamp).toDateString() === today
+      ).length
+
+      const criticalEvents = history.filter(e => 
+        e.severity === 'CRITICAL' || e.severity === 'WARNING'
+      ).length
+
+      const avgConf = history.reduce((sum, e) => sum + (e.confidence || 0), 0) / history.length
+
+      // Hourly data (last 24 hours)
+      const hourlyMap = {}
+      history.forEach(e => {
+        const hour = new Date(e.eventTimestamp).getHours()
+        hourlyMap[hour] = (hourlyMap[hour] || 0) + 1
+      })
+      const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+        hour: `${i}:00`,
+        events: hourlyMap[i] || 0
+      }))
+
+      // Severity distribution
+      const severityMap = {}
+      history.forEach(e => {
+        severityMap[e.severity] = (severityMap[e.severity] || 0) + 1
+      })
+      const severityData = Object.entries(severityMap).map(([name, value]) => ({
+        name, value
+      }))
+
+      // Device distribution
+      const deviceMap = {}
+      history.forEach(e => {
+        const device = e.deviceName || e.deviceId
+        deviceMap[device] = (deviceMap[device] || 0) + 1
+      })
+      const deviceData = Object.entries(deviceMap).map(([name, value]) => ({
+        name, value
+      }))
+
+      setStats({
+        totalEvents: history.length,
+        todayEvents,
+        criticalEvents,
+        avgConfidence: avgConf,
+        hourlyData,
+        severityData,
+        deviceData
+      })
+    }
+    
     calculateStats()
   }, [history])
-
-  const calculateStats = () => {
-    if (history.length === 0) return
-
-    const today = new Date().toDateString()
-    const todayEvents = history.filter(e => 
-      new Date(e.eventTimestamp).toDateString() === today
-    ).length
-
-    const criticalEvents = history.filter(e => 
-      e.severity === 'CRITICAL' || e.severity === 'WARNING'
-    ).length
-
-    const avgConf = history.reduce((sum, e) => sum + (e.confidence || 0), 0) / history.length
-
-    // Hourly data (last 24 hours)
-    const hourlyMap = {}
-    history.forEach(e => {
-      const hour = new Date(e.eventTimestamp).getHours()
-      hourlyMap[hour] = (hourlyMap[hour] || 0) + 1
-    })
-    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
-      hour: `${i}:00`,
-      events: hourlyMap[i] || 0
-    }))
-
-    // Severity distribution
-    const severityMap = {}
-    history.forEach(e => {
-      severityMap[e.severity] = (severityMap[e.severity] || 0) + 1
-    })
-    const severityData = Object.entries(severityMap).map(([name, value]) => ({
-      name, value
-    }))
-
-    // Device distribution
-    const deviceMap = {}
-    history.forEach(e => {
-      const device = e.deviceName || e.deviceId
-      deviceMap[device] = (deviceMap[device] || 0) + 1
-    })
-    const deviceData = Object.entries(deviceMap).map(([name, value]) => ({
-      name, value
-    }))
-
-    setStats({
-      totalEvents: history.length,
-      todayEvents,
-      criticalEvents,
-      avgConfidence: avgConf,
-      hourlyData,
-      severityData,
-      deviceData
-    })
-  }
 
   const fetchHistory = async () => {
     try {

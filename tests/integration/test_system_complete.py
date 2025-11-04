@@ -8,13 +8,14 @@ import requests
 import paho.mqtt.client as mqtt
 import json
 import time
+import os
 from datetime import datetime
 
-# Configuration
-GCP_IP = "34.87.133.103"
-BACKEND_URL = f"http://{GCP_IP}:8080"
-MQTT_BROKER = GCP_IP
-MQTT_PORT = 1883
+# Configuration from environment variables with fallback defaults
+GCP_IP = os.getenv("GCP_IP", "34.87.133.103")
+BACKEND_URL = os.getenv("BACKEND_URL", f"http://{GCP_IP}:8080")
+MQTT_BROKER = os.getenv("MQTT_HOST", GCP_IP)
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 
 print("=" * 60)
 print("🔍 VIBRAGUARD SYSTEM TEST")

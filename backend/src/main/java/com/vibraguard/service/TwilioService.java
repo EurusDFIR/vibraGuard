@@ -5,11 +5,13 @@ import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Twilio Service
@@ -90,8 +92,9 @@ public class TwilioService {
     }
 
     /**
-     * Gửi cảnh báo đầy đủ (SMS + Call) tới tất cả
+     * Gửi cảnh báo đầy đủ (SMS + Call) tới tất cả - Async to avoid blocking
      */
+    @Async
     public void sendFullAlert(String deviceId, double confidence) {
         String smsMessage = String.format(
                 "🚨 VibraGuard ALERT!\n" +
@@ -105,14 +108,18 @@ public class TwilioService {
         // Gửi SMS
         sendSmsToAll(smsMessage);
 
-        // Gọi điện (delay 1 giây để tránh rate limit)
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        makeCallToAll();
+        // Gọi điện (delay 1 giây để tránh rate limit) - use CompletableFuture for non-blocking delay with exception handling
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1000);
+                makeCallToAll();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("⚠️ Interrupted while waiting to make calls", e);
+            } catch (Exception e) {
+                log.error("❌ Error making calls: {}", e.getMessage(), e);
+            }
+        });
     }
 
     /**

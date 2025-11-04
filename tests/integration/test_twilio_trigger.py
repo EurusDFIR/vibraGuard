@@ -1,10 +1,12 @@
 import paho.mqtt.client as mqtt
 import json
 import time
+import os
 
-broker = '34.87.133.103'
-port = 1883
-topic = 'vibra_guard/sensor'
+# Configuration from environment variables with fallback defaults
+broker = os.getenv("MQTT_HOST", "34.87.133.103")
+port = int(os.getenv("MQTT_PORT", "1883"))
+topic = os.getenv("MQTT_TOPIC", "vibra_guard/sensor")
 
 message = {
     'deviceId': 'ESP32_CUA_SO_01',

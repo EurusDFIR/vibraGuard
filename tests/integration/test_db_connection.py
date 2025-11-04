@@ -5,15 +5,16 @@ Quick script to verify database connectivity before using DBeaver
 """
 
 import psycopg2
+import os
 from datetime import datetime
 
-# Connection parameters
+# Connection parameters from environment variables with fallback defaults
 DB_CONFIG = {
-    'host': '34.87.133.103',
-    'port': 5432,
-    'database': 'vibraguard_db',
-    'user': 'vibraguard_user',
-    'password': 'vibraguard_pass'
+    'host': os.getenv('DB_HOST', '34.87.133.103'),
+    'port': int(os.getenv('DB_PORT', '5432')),
+    'database': os.getenv('DB_NAME', 'vibraguard_db'),
+    'user': os.getenv('DB_USER', 'vibraguard_user'),
+    'password': os.getenv('DB_PASSWORD', 'vibraguard_pass')
 }
 
 def test_connection():

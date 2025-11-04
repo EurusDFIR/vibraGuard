@@ -6,14 +6,16 @@ Sends test data to MQTT broker and checks if it reaches the frontend via WebSock
 
 import json
 import time
+import os
 from datetime import datetime
 import subprocess
 import sys
 
-MQTT_HOST = "34.87.133.103"
-MQTT_PORT = 1883
-MQTT_TOPIC = "vibraguard/sensor_data"
-BACKEND_URL = f"http://{MQTT_HOST}:8080"
+# Configuration from environment variables with fallback defaults
+MQTT_HOST = os.getenv("MQTT_HOST", "34.87.133.103")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "vibraguard/sensor_data")
+BACKEND_URL = os.getenv("BACKEND_URL", f"http://{MQTT_HOST}:8080")
 
 def create_test_message():
     """Create a test sensor data message"""
