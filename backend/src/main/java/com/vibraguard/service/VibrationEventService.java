@@ -50,12 +50,22 @@ public class VibrationEventService {
         event.setDevice(device);
         event.setSensorValue(sensorValue);
         event.setEventTimestamp(java.time.LocalDateTime.now());
-        event.setSeverity("WARNING");
+        event.setSeverity(determineSeverity(sensorValue));
 
         VibrationEvent savedEvent = eventRepository.save(event);
         log.info("Event created with ID: {}", savedEvent.getId());
 
         return convertToDTO(savedEvent);
+    }
+
+    private String determineSeverity(int sensorValue) {
+        if (sensorValue > 800) {
+            return "CRITICAL";
+        } else if (sensorValue > 500) {
+            return "WARNING";
+        } else {
+            return "INFO";
+        }
     }
 
     private VibrationEventDTO convertToDTO(VibrationEvent event) {
