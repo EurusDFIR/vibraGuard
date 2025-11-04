@@ -15,12 +15,10 @@ function App() {
   const [history, setHistory] = useState([])
   const [systemStatus, setSystemStatus] = useState('UNKNOWN')
   const [connected, setConnected] = useState(false)
-  const [stompClient, setStompClient] = useState(null)
 
   // Kết nối WebSocket
   useEffect(() => {
     let client = null
-    let isSubscribed = false
 
     console.log('🔌 Connecting to WebSocket...')
     const socket = new SockJS(WS_URL)
@@ -28,10 +26,9 @@ function App() {
 
     client.connect(
       {},
-      (frame) => {
-        console.log('✅ WebSocket connected:', frame)
+      () => {
+        console.log('✅ WebSocket connected')
         setConnected(true)
-        isSubscribed = true
 
         // Subscribe vào topic /topic/alerts
         client.subscribe('/topic/alerts', (message) => {
@@ -80,8 +77,6 @@ function App() {
         setConnected(false)
       }
     )
-
-    setStompClient(client)
 
     // Request notification permission
     if (Notification.permission === 'default') {

@@ -23,7 +23,6 @@ function App() {
   const [systemStatus, setSystemStatus] = useState('UNKNOWN')
   const [connected, setConnected] = useState(false)
   const [devicesCount, setDevicesCount] = useState(0)
-  const [stompClient, setStompClient] = useState(null)
   const [activeTab, setActiveTab] = useState('dashboard')
   
   // Statistics
@@ -46,7 +45,7 @@ function App() {
 
     client.connect(
       {},
-      (frame) => {
+      () => {
         console.log('✅ WebSocket connected')
         setConnected(true)
 
@@ -95,8 +94,6 @@ function App() {
       }
     )
 
-    setStompClient(client)
-
     if (Notification.permission === 'default') {
       Notification.requestPermission()
     }
@@ -134,6 +131,7 @@ function App() {
   // Calculate statistics when history changes
   useEffect(() => {
     calculateStats()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history])
 
   const calculateStats = () => {

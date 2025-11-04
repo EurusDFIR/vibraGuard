@@ -6,6 +6,7 @@ Simulates backend sending SOUND_ALARM command
 
 import json
 import sys
+import os
 
 try:
     import paho.mqtt.client as mqtt
@@ -15,8 +16,9 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "paho-mqtt"])
     import paho.mqtt.client as mqtt
 
-MQTT_HOST = "34.87.133.103"
-MQTT_PORT = 1883
+# Configuration from environment variables with fallback defaults
+MQTT_HOST = os.getenv("MQTT_HOST", "34.87.133.103")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 
 def send_control_command(device_id, command):
     """Send control command to specific ESP32 device"""

@@ -108,8 +108,9 @@ public class ControlService {
      * Gửi lệnh qua MQTT
      */
     private void sendMqttCommand(String topic, String command) {
+        MqttClient client = null;
         try {
-            MqttClient client = new MqttClient(mqttBrokerUrl,
+            client = new MqttClient(mqttBrokerUrl,
                     "VibraGuard-Backend-Control-" + System.currentTimeMillis());
             client.connect();
 
@@ -118,12 +119,22 @@ public class ControlService {
             message.setRetained(false);
 
             client.publish(topic, message);
-            client.disconnect();
 
             log.info("📤 MQTT command sent: topic={}, command={}", topic, command);
         } catch (MqttException e) {
             log.error("❌ Failed to send MQTT command: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send MQTT command", e);
+        } finally {
+            if (client != null) {
+                try {
+                    if (client.isConnected()) {
+                        client.disconnect();
+                    }
+                    client.close();
+                } catch (MqttException e) {
+                    log.warn("⚠️ Error closing MQTT client: {}", e.getMessage());
+                }
+            }
         }
     }
 }
