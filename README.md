@@ -430,6 +430,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 
 **Made with ❤️ by the VibraGuard AI Team**
+**Lê Văn Hoàng**
+**Nguyễn Tuấn Việt**
+**Nguyễn Ngọc Hòa**
 
 [⬆ Back to Top](#️-vibraguard-ai)
 
